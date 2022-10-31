@@ -1,0 +1,106 @@
+#############################################################################################################
+https://astronomy-imaging-camera.com/software-drivers
+
+https://en.wikipedia.org/wiki/Dark-frame_subtraction
+Subtrai à imagem a matriz resultante do mapeamento com a tampa na lente.
+
+DeBayerning
+  RGBG - Feita a média pesada, dando mais peso à cor correspondente ao pixel especifico.
+
+Estudar
+  Filtro com valor da mediana dos pixeis vizinhos, DPS Dead pixel suppression technology
+  Dark-frame subtraction
+  Bayer filter
+
+Tutorial
+  https://pyfits.readthedocs.io/en/latest/
+  http://stsdas.stsci.edu/download/wikidocs/The_PyFITS_Handbook.pdf
+  http://stsdas.stsci.edu/pyraf/stscidocs/user_docs/pyfits_users_manual.pdf
+
+  https://www.youtube.com/watch?v=goH9yXu4jWw
+  https://docs.astropy.org/en/stable/io/fits/index.html
+
+  https://jakevdp.github.io/PythonDataScienceHandbook/
+
+#############################################################################################################
+
+HDUList which is a list-like collection of HDU
+Header Data Units, consisting of a header and (typically) a data array or table objects
+
+dir(hdulist)
+dir(hdulist[0])
+
+fits.open() memmap=True
+fits.getdata()
+
+hdulist.info()
+hdulist.close()
+hdulist[x].date
+hdulist[x].shape[k]
+hdul.writeto()
+
+np.full((dimx,dimy),2047)
+np.min(image_data)
+np.max(image_data)
+np.mean(image_data)
+np.std(image_data)
+
+plt.imshow(image_data, cmap='gray')
+plt.colorbar()
+plt.show()
+
+#############################################################################################################
+def histogram(hdul):
+    image_data = hdul["PRIMARY"].data
+    print(f"""Min: {np.min(image_data)}
+Max: {np.max(image_data)}
+Mean: {np.mean(image_data)}
+Std: {np.std(image_data)}""")
+
+    bins = np.linspace(np.min(image_data)-10, np.max(image_data)+10, round(np.std(image_data)*1.5))
+    plt.hist(image_data.flatten(), bins)
+    plt.show()
+#############################################################################################################
+
+O ADC do sensor é de 16 bits pelo que o maior valor contido num pixel é 2^16-1 = 65535 (branco), o menor é 0 (preto)
+65536 níveis de luz, portanto.
+
+1 semana:
+
+  1. Um bom exercício seria escreveres programas que produzam:
+  - o histograma da imagem (um gráfico que mostra o número de píxeis na imagem para cada intensidade
+  (e.g., numero de pixeis com valor 0, numero de pixeis com valor 1, numero de pixeis com valor 2, …..,
+  numero de pixeis com valor 65535); eixo dos yy = #pixeis, eixo dos xx = intensidade.
+  https://learn.astropy.org/tutorials/FITS-images.html
+  http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
+
+  2. A imagem invertida, basta transformar o valor de cada píxel em (65535 - valor actual);
+
+  3. Uma lista das coordenadas dos pixeis cujos valores são >= k, em que 0 <= k < 65535 é um
+  parâmetro que dás ao programa; como estes são “dark frames”, a lista que obténs corresponde a
+  píxeis com intensidade anómala acima do valor k;
+
+  4. dada a lista anterior, uma nova imagem em que os valores dos pixeis em causa são substituídos pela
+  mediana dos pixeis na sua vizinhança.
+
+2 semana:
+
+  1. organizar um notebook Jupyter com as imagens, o código e exemplos de execução (tb. mantido no github).
+  2. para k em  {0.5, 1.0, 1.5, 2.0, 2.5, 3.0}
+       - calcular o mapa de pixeis quentes a partir do master dark (i.e., with  value > avg + k * stddev)
+       - para cada imagem do objecto
+            - corrigir os pixeis quentes usando o mapa obtido anteriormente
+       - calcular a média de todas as imagens do objecto
+       - guardar o resultado num ficheiro
+
+      ={
+      0 = 43.63%
+      0.5 = 20.22%
+      1 = 6.81%
+      1.5 = 2.62%
+      2 = 1.58%
+      2.5 = 1.20%
+      3 = 0.91%
+      }
+#############################################################################################################
+Ideia: Variar a vizinhança no cálculo da mediana
