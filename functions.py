@@ -155,7 +155,7 @@ def get_true_hotpixels(hdul, hot_pixels, media, desvio, raio=1):
     return true_hotpixels
 
 #10
-def gammaCorrection(hdu, gamma):
+def gammaCorrection(hdu, gamma=0.4):
     data = np.copy(hdu["PRIMARY"].data)
     for line in data:
         for pixel in line:
@@ -163,7 +163,7 @@ def gammaCorrection(hdu, gamma):
     return data
 
 #11
-def histogramSpread(hdu, blackPoint, whitePoint):
+def histogramSpread(hdu, blackPoint=0, whitePoint=65535):
     data = np.copy(hdu["PRIMARY"].data)
     for line in data:
         for pixel in line:
