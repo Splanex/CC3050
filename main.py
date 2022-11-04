@@ -6,22 +6,6 @@ import sys
 import glob
 import functions
 
-"""
-name_gen(file_name)
-get_hotpixels(hdul, limit)
-remove_hotpixels(hdu, hot_pixels, raio=1)
-get_filtered_image_data(hdu_data, hot_pixels, raio=1)
-get_ADA_HV(hdu, hot_pixels, raio=1)
-get_stacked_image(darkframe, imgs_direct, std_mult=2, raio=1)
-get_true_hotpixels(hdul, hot_pixels, media, desvio, raio=1)
-scatter_plot(hotpixels_values,average_abs_diff)
-gammaCorrection(hdu, gamma=0.4)
-histogramSpread(hdu, blackPoint=0, whitePoint=65535)
-
-gamma correction i = i^gama, gama pode ser, por exemplo, 0.4
-(i - imin) / imax - i
-"""
-
 def true_hotpixels():
     with fits.open(sys.argv[1]) as darkframe:
         with fits.open(sys.argv[2]) as hdu:
