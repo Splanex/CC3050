@@ -208,7 +208,7 @@ def gammaCorrection(hdu, gamma=0.4):
         data_final = np.concatenate((process1.result(), process2.result(),process3.result(),process4.result(),process5.result(),process6.result(),process7.result(),process8.result(),process9.result(),process10.result(),process11.result(),process12.result()), axis=0)
         return data_final
 
-
+#10
 def aux_histogramSpread(data, blackPoint, whitePoint, max):
     x_res, y_res = data.shape
     for line in range(x_res):
