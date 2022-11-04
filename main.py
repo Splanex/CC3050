@@ -5,6 +5,7 @@ from os.path import exists
 import sys
 import glob
 import functions
+
 """
 name_gen(file_name)
 get_hotpixels(hdul, limit)
@@ -39,12 +40,6 @@ if __name__ == "__main__":
     """with fits.open(sys.argv[2]) as hdu:
         functions.remove_hotpixels(hdu, hot_pixels, raio=2)"""
 
-    with fits.open(sys.argv[1]) as hdu:
-        data1 = functions.gammaCorrection(hdu)
-        print(data1[0:20])
-        data2 = functions.histogramSpread(hdu)
-        print(data2[0:20])
-
     """with fits.open(sys.argv[1]) as darkframe:
         with fits.open(sys.argv[2]) as hdu:
             #functions.plot_ADA(hdu, darkframe, multiplicadores=[1.5, 2, 2.5],raio=2)
@@ -62,3 +57,13 @@ if __name__ == "__main__":
         data.dtype = float
         hdu = fits.PrimaryHDU(data)
         hdu.writeto("test.fits", overwrite=True)"""
+
+    """with fits.open(sys.argv[1]) as hdu:
+        data = functions.gammaCorrection(hdu)
+        img = fits.PrimaryHDU(data)
+        img.writeto("test.fits", overwrite=True)"""
+
+    with fits.open(sys.argv[1]) as hdu:
+        data = functions.gammaCorrection(hdu)
+        img = fits.PrimaryHDU(data)
+        img.writeto("test.fits", overwrite=True)
