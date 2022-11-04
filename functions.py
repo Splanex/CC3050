@@ -132,6 +132,7 @@ def plot_ADA(hdu, darkframe, multiplicadores= [0, 0.5, 1, 1.5, 2, 2.5, 3],raio=1
         hotpixels_values.append(hot_values)"""
         scatter_plot(hot_values,avg, i)
 
+#9
 def get_true_hotpixels(hdul, hot_pixels, media, desvio, raio=1):
     a = np.copy(hdul["PRIMARY"].data)
     true_hotpixels = []
@@ -152,3 +153,25 @@ def get_true_hotpixels(hdul, hot_pixels, media, desvio, raio=1):
     true_hotpixels = np.array(true_hotpixels)
 
     return true_hotpixels
+
+#10
+def gammaCorrection(hdu, gamma):
+    data = np.copy(hdu["PRIMARY"].data)
+    for line in data:
+        for pixel in line:
+            pixel = data.max() * (pixel / data.max()) ** (1/gamma)
+    return data
+
+#11
+def histogramSpread(hdu, blackPoint, whitePoint):
+    data = np.copy(hdu["PRIMARY"].data)
+    for line in data:
+        for pixel in line:
+            if (pixel < blackPoint):
+                z = 0
+            elif (pixel > whitePoint):
+                z = 1
+            else:
+                z = (pixel - blackPoint)  / (whitePoint - pixel)
+            pixel = z * data.max()
+    return data
