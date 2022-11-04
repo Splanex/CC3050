@@ -32,38 +32,64 @@ def true_hotpixels():
             hot_pixels = functions.get_hotpixels(darkframe, limit)
             return functions.get_true_hotpixels(hdu, hot_pixels, media, desvio, raio=2)
 
-if __name__ == "__main__":
-    #hot_pixels = true_hotpixels()
-    """with fits.open(sys.argv[2]) as darkframe:
-        functions.get_stacked_image(darkframe, sys.argv[3], raio=5)"""
-
-    """with fits.open(sys.argv[2]) as hdu:
-        functions.remove_hotpixels(hdu, hot_pixels, raio=2)"""
-
-    """with fits.open(sys.argv[1]) as darkframe:
+def make_filtered_image():
+    with fits.open(sys.argv[1]) as darkframe:
+        limit = np.mean(darkframe["PRIMARY"].data) + 2*np.std(darkframe["PRIMARY"].data)
+        hot_pixels = functions.get_hotpixels(darkframe,limit)
         with fits.open(sys.argv[2]) as hdu:
-            #functions.plot_ADA(hdu, darkframe, multiplicadores=[1.5, 2, 2.5],raio=2)
-            darkframe_data = np.copy(darkframe["PRIMARY"].data)
-            limit = np.mean(darkframe_data) + 2*np.std(darkframe_data)
-            hot_pixels = functions.get_hotpixels(darkframe, limit)
+            functions.remove_hotpixels(hdu, hot_pixels, raio=2)
 
-            avg, hot_values = functions.get_ADA_HV(hdu, hot_pixels, raio=2)
+def make_stacked_image():
+    with fits.open(sys.argv[1]) as darkframe:
+        with fits.open(sys.argv[2]) as direct:
+            functions.get_stacked_image(darkframe, direct, raio=5)
 
-            for i in range(10):
-                print(f"{hot_values[i]} {avg[i]}")"""
-
-    """with fits.open(sys.argv[1]) as hdu:
-        data = np.copy(hdu["PRIMARY"].data)
-        data.dtype = float
-        hdu = fits.PrimaryHDU(data)
-        hdu.writeto("test.fits", overwrite=True)"""
-
-    """with fits.open(sys.argv[1]) as hdu:
-        data = functions.gammaCorrection(hdu)
-        img = fits.PrimaryHDU(data)
-        img.writeto("test.fits", overwrite=True)"""
-
+def make_gamma():
     with fits.open(sys.argv[1]) as hdu:
-        data = functions.gammaCorrection(hdu)
-        img = fits.PrimaryHDU(data)
-        img.writeto("test.fits", overwrite=True)
+            final_data = functions.gammaCorrection(hdu)
+            img = fits.PrimaryHDU(final_data)
+            img.writeto(functions.new_name("gamma.fits"), overwrite=True)
+
+def make_histogramSpread():
+    with fits.open(sys.argv[1]) as hdu:
+            final_data = functions.histogramSpread(hdu)
+            img = fits.PrimaryHDU(final_data)
+            img.writeto(functions.new_name("gamma.fits"), overwrite=True)
+
+def make_gamma_from_filtered_image(raio=1):
+    with fits.open(sys.argv[1]) as darkframe:
+        with fits.open(sys.argv[2]) as hdu:
+            limit = np.mean(darkframe["PRIMARY"].data) + 2*np.std(darkframe["PRIMARY"].data)
+            hot_pixels = functions.get_hotpixels(darkframe, limit)
+            new_data = functions.get_filtered_image_data(hdu["PRIMARY"].data, hot_pixels, raio=raio)
+
+            hdul = fits.PrimaryHDU(new_data)
+            hdul.writeto("test.fits", overwrite=True)
+
+            with fits.open("test.fits") as temp:
+                final_data = functions.gammaCorrection(temp)
+                img = fits.PrimaryHDU(final_data)
+                img.writeto("test.fits", overwrite=True)
+
+def make_histogramSpread_from_filtered_image(raio=1):
+    with fits.open(sys.argv[1]) as darkframe:
+        with fits.open(sys.argv[2]) as hdu:
+            limit = np.mean(darkframe["PRIMARY"].data) + 2*np.std(darkframe["PRIMARY"].data)
+            hot_pixels = functions.get_hotpixels(darkframe, limit)
+            new_data = functions.get_filtered_image_data(hdu["PRIMARY"].data, hot_pixels, raio=raio)
+
+            hdul = fits.PrimaryHDU(new_data)
+            hdul.writeto("test.fits", overwrite=True)
+
+            with fits.open("test.fits") as temp:
+                final_data = functions.histogramSpread(temp)
+                img = fits.PrimaryHDU(final_data)
+                img.writeto("test.fits", overwrite=True)
+
+def make_plots(multiplicadores=[0, 0.5, 1,1.5, 2, 2.5, 3], raio=1):
+    with fits.open(sys.argv[1]) as darkframe:
+        with fits.open(sys.argv[2]) as hdu:
+            functions.plot_ADA(darkframe, hdu)
+
+if __name__ == "__main__":
+    make_plots()
