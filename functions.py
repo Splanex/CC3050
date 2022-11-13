@@ -7,7 +7,7 @@ import glob
 import concurrent.futures
 import corrections
 
-#1
+
 def name_gen(file_name):
     i=0
     check_name = file_name
@@ -17,13 +17,13 @@ def name_gen(file_name):
     print(f"Novo ficheiro gerado: {check_name}")
     return check_name
 
-#2
+
 def get_hotpixels(hdul, limit):
     data = hdul["PRIMARY"].data
     return np.argwhere(data >= limit)
 
-#3
-def remove_hotpixels(hdu, hot_pixels, width=1): #Utiliza 1
+
+def remove_hotpixels(hdu, hot_pixels, width=1):
     a = np.copy(hdu["PRIMARY"].data)
     x_res,y_res = a.shape
     for k in hot_pixels:
@@ -43,7 +43,7 @@ def remove_hotpixels(hdu, hot_pixels, width=1): #Utiliza 1
     except Exception as e:
         print(e)
 
-#4
+
 def get_filtered_image_data(hdu_data, hot_pixels, width):
     a = np.copy(hdu_data)
     x_res,y_res = a.shape
@@ -56,7 +56,7 @@ def get_filtered_image_data(hdu_data, hot_pixels, width):
 
     return a
 
-#5
+
 def get_ADA_HV(hdu, hot_pixels, width):
     a = np.copy(hdu["PRIMARY"].data)
     abs_diff_average = []
@@ -75,10 +75,10 @@ def get_ADA_HV(hdu, hot_pixels, width):
 
     return abs_diff_average, hotpixels_values
 
-#7
-def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1): #2,4
+
+def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1):
     print(f"Multiplicador de desvio = {std_mult}")
-    print(f"width = {width}")
+    print(f"Width = {width}")
     #calcular hot_pixels
     darkframe_data = np.copy(darkframe["PRIMARY"].data)
     limit = np.mean(darkframe_data) + std_mult*np.std(darkframe_data)
@@ -94,6 +94,7 @@ def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1): #2,4
     #Guardar os dados num ficherio fits
     hdu = fits.PrimaryHDU(final_image)
     hdu.writeto(imgs_direct+"stacked.fits", overwrite=True)
+    print(f"Ficheiro stacked gerado: stacked.fits")
 
 def scatter_plot(hotpixels_values,average_abs_diff, k):
     plt.scatter(hotpixels_values,average_abs_diff)
@@ -102,7 +103,7 @@ def scatter_plot(hotpixels_values,average_abs_diff, k):
     plt.title("K = {}".format(k))
     plt.show()
 
-def plot_ADA(hdu, darkframe, multiplicadores= [0, 0.5, 1, 1.5, 2, 2.5, 3],width=1): #2,5
+def plot_ADA(hdu, darkframe, multiplicadores= [0, 0.5, 1, 1.5, 2, 2.5, 3],width=1):
     """average_abs_diff = []
     hotpixels_values = []"""
     for i in multiplicadores:
@@ -117,7 +118,7 @@ def plot_ADA(hdu, darkframe, multiplicadores= [0, 0.5, 1, 1.5, 2, 2.5, 3],width=
         hotpixels_values.append(hot_values)"""
         scatter_plot(hot_values,avg, i)
 
-#9
+
 def get_true_hotpixels(hdul, hot_pixels, media, desvio, width=1):
     a = np.copy(hdul["PRIMARY"].data)
     true_hotpixels = []

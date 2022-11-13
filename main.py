@@ -25,8 +25,12 @@ def make_filtered_image():
 
 def make_stacked_image():
     with fits.open(sys.argv[1]) as darkframe:
-        with fits.open(sys.argv[2]) as direct:
-            functions.get_stacked_image(darkframe, direct, width=2)
+        directory = sys.argv[2]
+
+        if directory[-1] != '/':
+            directory += '/'
+
+        functions.get_stacked_image(darkframe, directory, width=2)
 
 def make_gamma():
     with fits.open(sys.argv[1]) as hdu:
@@ -76,6 +80,7 @@ def make_plots(multiplicadores=[0, 0.5, 1,1.5, 2, 2.5, 3], width=1):
             functions.plot_ADA(darkframe, hdu)
 
 if __name__ == "__main__":
-    make_plots()
+    #make_plots()
     #make_filtered_image()
+    make_stacked_image()
     #make_gamma()
