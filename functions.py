@@ -56,26 +56,6 @@ def get_filtered_image_data(hdu_data, hot_pixels, width):
 
     return a
 
-
-def get_ADA_HV(hdu, hot_pixels, width):
-    a = np.copy(hdu["PRIMARY"].data)
-    abs_diff_average = []
-    hotpixels_values = []
-    for k in hot_pixels:
-        line = k[0]
-        collumn = k[1]
-        hotpixels_values.append(a[line][collumn])
-
-        neighbours = np.array([abs(a[line][collumn] - a[line+i][collumn+j]) for i in range(-width, width+1) for j in range(-width, width+1) if ((line+i>=0 and collumn+j>=0 and line+i<len(a) and collumn+j<len(a[0])) and (not(i==0 and j==0)))])
-        total1 = np.sum(neighbours)
-        n_neighbours = len(neighbours)
-
-
-        abs_diff_average.append(total/n_neighbours)
-
-    return abs_diff_average, hotpixels_values
-
-
 def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1):
     print(f"Multiplicador de desvio = {std_mult}")
     print(f"Width = {width}")
@@ -95,29 +75,6 @@ def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1):
     hdu = fits.PrimaryHDU(final_image)
     hdu.writeto(imgs_direct+"stacked.fits", overwrite=True)
     print(f"Ficheiro stacked gerado: stacked.fits")
-
-def scatter_plot(hotpixels_values,average_abs_diff, k):
-    plt.scatter(hotpixels_values,average_abs_diff)
-    plt.xlabel('Hot values')
-    plt.ylabel('Absolute difference average')
-    plt.title("K = {}".format(k))
-    plt.show()
-
-def plot_ADA(hdu, darkframe, multiplicadores= [0, 0.5, 1, 1.5, 2, 2.5, 3],width=1):
-    """average_abs_diff = []
-    hotpixels_values = []"""
-    for i in multiplicadores:
-        #calcular hot_pixels
-        darkframe_copy = np.copy(darkframe["PRIMARY"].data)
-        limit = np.mean(darkframe_copy) + i*np.std(darkframe_copy)
-        hot_pixels = get_hotpixels(darkframe, limit)
-
-        avg, hot_values = get_ADA_HV(hdu, hot_pixels, width) #Obtem os AVG e os valores dos hot_pixels para cada multiplicador
-        """
-        average_abs_diff.append(avg)
-        hotpixels_values.append(hot_values)"""
-        scatter_plot(hot_values,avg, i)
-
 
 def get_true_hotpixels(hdul, hot_pixels, media, desvio, width=1):
     a = np.copy(hdul["PRIMARY"].data)

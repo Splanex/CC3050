@@ -26,23 +26,21 @@ def make_filtered_image():
 def make_stacked_image():
     with fits.open(sys.argv[1]) as darkframe:
         directory = sys.argv[2]
-
         if directory[-1] != '/':
             directory += '/'
-
-        functions.get_stacked_image(darkframe, directory, width=2)
+            functions.get_stacked_image(darkframe, directory, width=2)
 
 def make_gamma():
     with fits.open(sys.argv[1]) as hdu:
             final_data = functions.corrections.gammaCorrection(hdu)
             img = fits.PrimaryHDU(final_data)
-            img.writeto(functions.name_gen("gamma.fits"), overwrite=True)
+            img.writeto(functions.name_gen("Gamma.fits"), overwrite=True)
 
 def make_histogramSpread():
     with fits.open(sys.argv[1]) as hdu:
             final_data = functions.corrections.histogramSpread(hdu)
             img = fits.PrimaryHDU(final_data)
-            img.writeto(functions.name_gen("gamma.fits"), overwrite=True)
+            img.writeto(functions.name_gen("HistogramSpread.fits"), overwrite=True)
 
 def make_gamma_from_filtered_image(width=1):
     with fits.open(sys.argv[1]) as darkframe:
@@ -52,12 +50,13 @@ def make_gamma_from_filtered_image(width=1):
             new_data = functions.get_filtered_image_data(hdu["PRIMARY"].data, hot_pixels, width=width)
 
             hdul = fits.PrimaryHDU(new_data)
-            hdul.writeto("test.fits", overwrite=True)
+            new_name = functions.name_gen("Gamma.fits")
+            hdul.writeto(new_name, overwrite=True)
 
-            with fits.open("test.fits") as temp:
+            with fits.open(new_name) as temp:
                 final_data = functions.corrections.gammaCorrection(temp)
                 img = fits.PrimaryHDU(final_data)
-                img.writeto("test.fits", overwrite=True)
+                img.writeto(new_name, overwrite=True)
 
 def make_histogramSpread_from_filtered_image(width=1):
     with fits.open(sys.argv[1]) as darkframe:
@@ -67,20 +66,19 @@ def make_histogramSpread_from_filtered_image(width=1):
             new_data = functions.get_filtered_image_data(hdu["PRIMARY"].data, hot_pixels, width=width)
 
             hdul = fits.PrimaryHDU(new_data)
-            hdul.writeto("test.fits", overwrite=True)
+            new_name = functions.name_gen("HistogramSpread.fits")
+            hdul.writeto(new_name, overwrite=True)
 
-            with fits.open("test.fits") as temp:
+            with fits.open(new_name) as temp:
                 final_data = functions.corrections.histogramSpread(temp)
                 img = fits.PrimaryHDU(final_data)
-                img.writeto("test.fits", overwrite=True)
-
-def make_plots(multiplicadores=[0, 0.5, 1,1.5, 2, 2.5, 3], width=1):
-    with fits.open(sys.argv[1]) as darkframe:
-        with fits.open(sys.argv[2]) as hdu:
-            functions.plot_ADA(darkframe, hdu)
+                img.writeto(new_name, overwrite=True)
 
 if __name__ == "__main__":
-    #make_plots()
     #make_filtered_image()
-    make_stacked_image()
-    #make_gamma()
+    #make_stacked_image()
+    #print(true_hotpixels())
+    make_gamma()
+    #make_histogramSpread()
+    #make_gamma_from_filtered_image()
+    #make_histogramSpread_from_filtered_image()

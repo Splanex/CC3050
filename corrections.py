@@ -8,8 +8,10 @@ import concurrent.futures
 
 def axu_gammaCorrection(data, gamma, max):
     x_res, y_res = data.shape
-    correction = lambda valor : max * ((valor / max) ** (1/gamma))
-    data = [correction(data[line][collumn]) for line in range(x_res) for collumn in range(y_res)]
+    for line in range(x_res):
+        for collumn in range(y_res):
+            data[line][collumn] = max * ((data[line][collumn] / max) ** (1/gamma)) #data[line][collumn] ** gamma
+    #data = [(max * ((data[line][collumn] / max) ** (1/gamma))) for line in range(x_res) for collumn in range(y_res)]        
     return data
 
 
