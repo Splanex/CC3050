@@ -1,0 +1,29 @@
+ADA
+min = 2.8
+average = 1246.8517589715652
+median = 1113.6
+max = 5072.8
+
+Aplicar o filtro a pixeis, a pixeis determinados como possiveis pontos quentes, cuja ADA seja superior a um determinado valor:
+(Corre uma lista de possiveis pixeis quentes)
+
+New_new1
+ADA = 1113.6
+New_new2
+ADA = 500
+New_new3
+ADA = 250
+New_new4
+ADA = 100
+
+Aplicar o filtro a todos os pixeis cuja ADA seja superior a um determinado valor:
+(Corre todos os pixeis)
+
+New_new5 (all)
+ADA = 1113.6
+New_new6 (all)
+ADA = 500
+New_new7 (all)
+ADA = 250
+New_new8 (all)
+ADA = 100

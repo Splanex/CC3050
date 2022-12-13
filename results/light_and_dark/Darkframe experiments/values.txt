@@ -1,0 +1,20 @@
+Valores atribuidos à variável "limit":
+
+test = 1,000
+test2 = 500
+test3 = 300
+test4 = 350
+test5 = 400
+test6 = 450
+test7 = 490
+test8 = 480
+test9 = 485 <-
+test10 = 487
+test11 = 486
+test12 = 488
+test13 = 489
+test14 = 495 <--
+test15 = 494 <-- np.mean(darkframe["PRIMARY"].data) + 0.057*np.std(darkframe["PRIMARY"].data)
+test16 = 493 <--
+test17 = 492
+test18 = 491
