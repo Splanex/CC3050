@@ -6,6 +6,8 @@ import sys
 import glob
 import concurrent.futures
 import corrections
+import math
+import random
 
 def name_gen(file_name):
     i=0
@@ -125,7 +127,6 @@ def remove_resistant_hotpixels(hdu,width=1):
 def remove_all_resistant_hotpixels(hdu,width=1):
     data_copy = np.copy(hdu["PRIMARY"].data)
     x_res,y_res = data_copy.shape
-
     all_pixels = np.argwhere(data_copy >= 0)
 
     for k in all_pixels:
@@ -148,3 +149,45 @@ def remove_all_resistant_hotpixels(hdu,width=1):
 
     except Exception as e:
         print(e)
+
+
+def get_PSNR(data1, data2):
+    x_res, y_res = data1.shape
+    temp_mse = 0
+    for x in range(0, x_res):
+        for y in range(0, y_res):
+            print(f"{x}:{y}")
+            temp_mse += (data1[x][y] - data2[x][y])**2
+    mse = temp_mse / (x_res*y_res)
+
+    return (20*math.log(65535,10) - 10*math.log(mse,10))
+
+def get_background_value(data):
+    counts = np.bincount(data.flatten())
+    moda = np.argmax(counts)
+    return moda
+
+def gen_noise(background_value, x_res, y_res, max_value=65535, noise_quantity=0.01):
+    num_noise = int(x_res * y_res * noise_quantity)
+    possible_noise = range(background_value, x_res)
+    noise_list = []
+    x = []
+    y = []
+    for i in range(num_noise):
+        noise_list.append(random.choice(possible_noise))
+
+    for i in range(num_noise):
+        x.append(random.choice(range(x_res)))
+        y.append(random.choice(range(y_res)))
+
+    noise_x_indexes = np.array(x, dtype = "uint16")
+    noise_y_indexes = np.array(y, dtype = "uint16")
+    noise_list = np.array(noise_list, dtype = "uint16")
+
+    return noise_x_indexes, noise_y_indexes, noise_list
+
+def gen_noisy_image_data(x_index, y_index, noise, perfect_image_data):
+    for i in range(0,len(x_index)):
+        if perfect_image_data[x_index[i]][y_index[i]] < noise[i]:
+            perfect_image_data[x_index[i]][y_index[i]] = noise[i]
+    return perfect_image_data

@@ -20,8 +20,8 @@ def test_make_filtered_image():
 
 def make_filtered_image():
     with fits.open(sys.argv[1]) as darkframe:
-        limit = np.mean(darkframe["PRIMARY"].data) + 2*np.std(darkframe["PRIMARY"].data)
-        #limit = np.mean(darkframe["PRIMARY"].data) + 0.057*np.std(darkframe["PRIMARY"].data)
+        #limit = np.mean(darkframe["PRIMARY"].data) + 2*np.std(darkframe["PRIMARY"].data)
+        limit = np.mean(darkframe["PRIMARY"].data) + 0.057*np.std(darkframe["PRIMARY"].data)
         hot_pixels = functions.get_hotpixels(darkframe,limit)
         with fits.open(sys.argv[2]) as hdu:
             functions.remove_hotpixels(hdu, hot_pixels, width=2)
@@ -87,6 +87,33 @@ def remove_all_resistant():
     with fits.open(sys.argv[1]) as hdu:
         functions.remove_all_resistant_hotpixels(hdu)
 
+def PSNR():
+    with fits.open(sys.argv[1]) as hdu1:
+        with fits.open(sys.argv[2]) as hdu2:
+            hdu1_copy = np.copy(hdu1["PRIMARY"].data)
+            hdu2_copy = np.copy(hdu2["PRIMARY"].data)
+            print(functions.get_PSNR(hdu1_copy,hdu2_copy))
+
+def make_noisy_file():
+    with fits.open(sys.argv[1]) as hdu:
+        data_copy = np.copy(hdu["PRIMARY"].data)
+        background_value = functions.get_background_value(data_copy)
+        x_res, y_res = data_copy.shape
+
+        x_index, y_index, noise = functions.gen_noise(background_value, x_res, y_res)
+
+        noisy_image_data = functions.gen_noisy_image_data(x_index, y_index, noise, data_copy)
+
+        new_name = "Noisy_image.fits"
+
+        try:
+            hdul = fits.PrimaryHDU(noisy_image_data)
+            hdul.writeto(new_name,overwrite=True)
+            print(f"Novo ficheiro gerado: {new_name}")
+
+        except Exception as e:
+            print(e)
+
 if __name__ == "__main__":
     #make_filtered_image() X
     #test_make_filtered_image() X
@@ -97,4 +124,6 @@ if __name__ == "__main__":
     #make_histogramSpread_from_filtered_image() X
     #filter_darkframe() X
     #remove_resistant() X
-    #remove_all_resistant() X
+    #remove_all_resistant()X
+    #PSNR()
+    #make_noisy_file()
