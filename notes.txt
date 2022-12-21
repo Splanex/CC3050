@@ -1,0 +1,32 @@
+v > J*mean(v) + K*std_dev(v) + L
+J=5 (igual à width?)
+K=10 ()
+L=0.01
+
+Métodos alternativos:
+  -We could split the Bayer image into four images, one per RGGB channel, and analyse each channel separately.
+  -To identify hot sensels we might use some "maximum" algorithm, eg a sensel is hot if it is greater than the maximum of surrounding sensels, multiplied by a factor.
+  -Instead of re-running dcraw with a list of bad pixels, we could fix them with IM and re-create the Bayer image as a DNG file. See Processing Bayer pixels.
+  -We might identify hot sensels from a demosaiced image, eg by comparing the colour of a 3x3 square with surrounding colours.
+  -Correction could be made to demosaiced images.
+
+- Porque não utilizar utilizar a mesma estratégia de identificação de pixeis de fundo para
+limit o número de pixeis iterados?
+
+
+TODO:
+  Gerador de ruido:
+    Obter moda do histograma (counts = np.bincount(data.flatten()), moda = np.argmax(counts))
+
+
+  Peak signal to noise ratio
+
+6252*4176 = 26M
+len(data) = 4176
+len(data[0]) = 6252
+
+data_copy = [data_copy < limit]
+print(np.average(data_copy))
+
+Peak signal to noise ratio
+structural similiarity
