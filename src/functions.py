@@ -9,6 +9,7 @@ import corrections
 import math
 import random
 
+#Returns a new file name based on the input file name by adding "_newk" at the end, with k being the smallest possible number
 def name_gen(file_name):
     i=0
     check_name = file_name
@@ -17,14 +18,16 @@ def name_gen(file_name):
         check_name = file_name[:-5]+"_new"+str(i)+".fits"
     return check_name
 
-def get_hotpixels(data):
-    limit = np.mean(data) + 0.057*np.std(data)
+#Returns a lol with the coordinates of the pixels that go over a certain value
+def get_hotpixels(data, k=0.057):
+    limit = np.mean(data) + k*np.std(data)
     return np.argwhere(data >= limit)
 
+#Returns an array with the values of the neighbouring pixels
 def get_neighbours(data,x_res,y_res,line,collumn,width):
     return (np.array([data[line+i][collumn+j] for i in range(-width, width+1) for j in range(-width, width+1) if ((line+i>=0 and collumn+j>=0 and line+i<x_res and collumn+j<y_res) and (not(i==0 and j==0)))]))
 
-
+#Returns a modified lol where the hot pixels' value have been changed by the median of the neighbouring pixels'
 def remove_hotpixels(data, hot_pixels, width=1):
     x_res,y_res = data.shape
     for k in hot_pixels:
@@ -36,6 +39,16 @@ def remove_hotpixels(data, hot_pixels, width=1):
 
     return data
 
+def remove_hotpixels_0(data, darkframe_data, hot_pixels, width=1):
+    x_res,y_res = data.shape
+    for k in hot_pixels:
+        line = k[0]
+        collumn = k[1]
+        data[line][collumn] = max(0,data[line][collumn]-darkframe_data[line][collumn])
+
+    return data
+
+#Returns the absolute difference average between a pixel and its neighbours
 def get_ADA(value, neighbours):
     total = 0
     for neighbour in neighbours:
@@ -46,10 +59,10 @@ def get_ADA(value, neighbours):
     return (total/len(neighbours))
 
 
+#Goes through every pixel in a list of potential hot pixels and, if its absolute difference average is above alpha, changes its value with the median of the neighbouring pixels'
 def remove_resistant_hotpixels(data_copy,width=1):
     x_res,y_res = data_copy.shape
 
-    #Obter lista de potenciais pixeis quentes não presentes no darkframe
     hot_pixels = get_hotpixels(data_copy)
 
     for k in hot_pixels:
@@ -57,13 +70,14 @@ def remove_resistant_hotpixels(data_copy,width=1):
         collumn = k[1]
         neighbours = get_neighbours(data_copy,x_res,y_res,line,collumn,width)
         average_abs_diff = get_ADA(data_copy[line][collumn], neighbours)
-        if (average_abs_diff >= 100):
+        if (average_abs_diff >= 500):
             mediana = np.median(neighbours)
             data_copy[line][collumn] = mediana
 
     return data_copy
 
-def remove_all_resistant_hotpixels(data_copy,width=1):
+#Goes through every pixel and, if its absolute difference average is above alpha, changes its value with the median of the neighbouring pixels'
+def remove_all_resistant_hotpixels(data_copy,width=1, alpha=100):
     x_res,y_res = data_copy.shape
     all_pixels = np.argwhere(data_copy >= 0)
 
@@ -72,22 +86,37 @@ def remove_all_resistant_hotpixels(data_copy,width=1):
         collumn = k[1]
         neighbours = get_neighbours(data_copy,x_res,y_res,line,collumn,width)
         average_abs_diff = get_ADA(data_copy[line][collumn], neighbours)
-        if (average_abs_diff >= 100):
+        if (average_abs_diff >= alpha):
             mediana = np.median(neighbours)
             data_copy[line][collumn] = mediana
 
     return data_copy
 
-
-def get_PSNR(data1, data2):
+#Calculates and returns the peak signal to noise ratio between an image with no hot pixels and a copy of it with noise inserted into it that went through the hot pixels removing algorithm
+def get_PSNR(data1, data2, max=65535):
     x_res, y_res = data1.shape
     temp_mse = 0
     for x in range(0, x_res):
         for y in range(0, y_res):
-            temp_mse += (data1[x][y] - data2[x][y])**2
+            temp_mse += (float(data1[x][y]) - float(data2[x][y]))**2.0
     mse = temp_mse / (x_res*y_res)
 
+    if mse == 0:
+        return 0
+
     return (20*math.log(65535,10) - 10*math.log(mse,10))
+
+def get_PSNR_0(data1, data2, hot_pixels, max=65535):
+    temp_mse = 0
+    for hot in hot_pixels:
+        x = hot[0]
+        y = hot[1]
+        temp_mse += (float(data1[x][y]) - float(data2[x][y]))**2.0
+    mse = temp_mse / len(hot_pixels)
+    if mse == 0:
+        return 0
+
+    return (20*math.log(max,10) - 10*math.log(mse,10))
 
 def get_background_value(data):
     counts = np.bincount(data.flatten())
@@ -96,7 +125,7 @@ def get_background_value(data):
 
 def gen_noise(background_value, x_res, y_res, noise_quantity=random.choice([0.005,0.006,0.007,0.008,0.009,0.01]), max_value=65535):
     num_noise = int(x_res * y_res * noise_quantity)
-    possible_noise = range(background_value, x_res)
+    possible_noise = range(background_value, max_value)
     noise_list = []
     x = []
     y = []
@@ -119,6 +148,28 @@ def gen_noisy_image_data(x_index, y_index, noise, perfect_image_data):
             perfect_image_data[x_index[i]][y_index[i]] = noise[i]
     return perfect_image_data
 
+def gen_noisy_image_data_0(hot_pixels, perfect_image_data, darkframe_data, k=None):
+    for hot in hot_pixels:
+        x = hot[0]
+        y = hot[1]
+        #if x > 500 and x < 3500 and y > 500 and y < 5500:
+        if k==None:
+            perfect_image_data[x][y] = max(perfect_image_data[x][y],darkframe_data[x][y])
+        else:
+            noise = random.gauss(1,k)
+            perfect_image_data[x][y] = max(perfect_image_data[x][y],noise*darkframe_data[x][y])
+    #perfect_image_data = np.array(perfect_image_data, dtype = "uint16")
+    return perfect_image_data
+
+def sub_image(data, darkframe_data):
+    x_res, y_res = data.shape
+    for x in range(0,x_res):
+        for y in range(0,y_res):
+            if (data[x][y]>darkframe_data[x][y]):
+                data[x][y] = data[x][y]-darkframe_data[x][y]
+            else:
+                data[x][y] = 0
+    return data
 
 """def scatter_plot(hotpixels_values,average_abs_diff, k):
     plt.scatter(hotpixels_values,average_abs_diff)
