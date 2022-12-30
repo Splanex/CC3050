@@ -37,7 +37,6 @@ def remove_hotpixels(data, hot_pixels, width=1):
         mediana = np.median(neighbours)
         data[line][collumn] = mediana
 
-    return data
 
 def remove_hotpixels_0(data, darkframe_data, hot_pixels, width=1):
     x_res,y_res = data.shape
@@ -46,7 +45,6 @@ def remove_hotpixels_0(data, darkframe_data, hot_pixels, width=1):
         collumn = k[1]
         data[line][collumn] = max(0,data[line][collumn]-darkframe_data[line][collumn])
 
-    return data
 
 #Returns the absolute difference average between a pixel and its neighbours
 def get_ADA(value, neighbours):
@@ -60,17 +58,18 @@ def get_ADA(value, neighbours):
 
 
 #Goes through every pixel in a list of potential hot pixels and, if its absolute difference average is above alpha, changes its value with the median of the neighbouring pixels'
-def remove_resistant_hotpixels(data_copy,width=1):
+def remove_resistant_hotpixels(data_copy, min=500,width=1):
     x_res,y_res = data_copy.shape
 
     hot_pixels = get_hotpixels(data_copy)
+    #hot_pixels = get_background_value(data_copy)
 
     for k in hot_pixels:
         line = k[0]
         collumn = k[1]
         neighbours = get_neighbours(data_copy,x_res,y_res,line,collumn,width)
         average_abs_diff = get_ADA(data_copy[line][collumn], neighbours)
-        if (average_abs_diff >= 500):
+        if (average_abs_diff >= min):
             mediana = np.median(neighbours)
             data_copy[line][collumn] = mediana
 
@@ -169,7 +168,16 @@ def sub_image(data, darkframe_data):
                 data[x][y] = data[x][y]-darkframe_data[x][y]
             else:
                 data[x][y] = 0
-    return data
+
+def flat_field_correction(data, flatfield_data):
+    x_res, y_res = data.shape
+    scale_factor = np.max(flatfield_data.flatten())
+
+    for x in range(0,x_res):
+        for y in range(0,y_res):
+            data[x][y] = round((float(data[x][y])*scale_factor) / (float(flatfield_data[x][y])))
+    #data = np.array(data, dtype = "uint16")
+
 
 """def scatter_plot(hotpixels_values,average_abs_diff, k):
     plt.scatter(hotpixels_values,average_abs_diff)

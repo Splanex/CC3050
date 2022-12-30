@@ -15,8 +15,8 @@ def test_make_filtered_image():
     with fits.open(sys.argv[1]) as darkframe:
         hot_pixels = np.argwhere(darkframe["PRIMARY"].data != 0)
         with fits.open(sys.argv[2]) as hdu:
-            data = np.copy(hdu["PRIMARY"].data)
-            new_data = functions.remove_hotpixels(data, hot_pixels, width=2)
+            new_data = np.copy(hdu["PRIMARY"].data)
+            functions.remove_hotpixels(new_data, hot_pixels, width=2)
 
             file_name = hdu.filename()
             new_name = functions.name_gen(file_name)
@@ -34,8 +34,8 @@ def make_filtered_image():
         darkframe_data = darkframe["PRIMARY"].data
         hot_pixels = functions.get_hotpixels(darkframe_data)
         with fits.open(sys.argv[2]) as hdu:
-            data = np.copy(hdu["PRIMARY"].data)
-            new_data = functions.remove_hotpixels(data, hot_pixels, width=2)
+            new_data = np.copy(hdu["PRIMARY"].data)
+            functions.remove_hotpixels(new_data, hot_pixels, width=2)
 
             file_name = hdu.filename()
             new_name = functions.name_gen(file_name)
@@ -67,8 +67,8 @@ def make_gamma_from_filtered_image(width=1):
         with fits.open(sys.argv[2]) as hdu:
             darkframe_data = darkframe["PRIMARY"].data
             hot_pixels = functions.get_hotpixels(darkframe_data)
-            data = hdu["PRIMARY"].data
-            new_data = functions.remove_hotpixels(data, hot_pixels, width=width)
+            new_data = hdu["PRIMARY"].data
+            functions.remove_hotpixels(new_data, hot_pixels, width=width)
 
             hdul = fits.PrimaryHDU(new_data)
             new_name = functions.name_gen("Gamma_from_filtered_image.fits")
@@ -85,8 +85,8 @@ def make_histogramSpread_from_filtered_image(width=1):
         with fits.open(sys.argv[2]) as hdu:
             darkframe_data = darkframe["PRIMARY"].data
             hot_pixels = functions.get_hotpixels(darkframe_data)
-            data = hdu["PRIMARY"].data
-            new_data = functions.remove_hotpixels(data, hot_pixels, width=width)
+            new_data = hdu["PRIMARY"].data
+            functions.remove_hotpixels(new_data, hot_pixels, width=width)
 
             hdul = fits.PrimaryHDU(new_data)
             new_name = functions.name_gen("HistogramSpread_from_filtered_image.fits")
@@ -100,8 +100,8 @@ def make_histogramSpread_from_filtered_image(width=1):
 
 def remove_resistant():
     with fits.open(sys.argv[1]) as hdu:
-        data_copy = np.copy(hdu["PRIMARY"].data)
-        data = functions.remove_resistant_hotpixels(data_copy)
+        data = np.copy(hdu["PRIMARY"].data)
+        functions.remove_resistant_hotpixels(data)
 
         file_name = hdu.filename()
         new_name = functions.name_gen(file_name)
@@ -116,8 +116,8 @@ def remove_resistant():
 
 def remove_all_resistant():
     with fits.open(sys.argv[1]) as hdu:
-        data_copy = np.copy(hdu["PRIMARY"].data)
-        data = functions.remove_all_resistant_hotpixels(data_copy)
+        data = np.copy(hdu["PRIMARY"].data)
+        functions.remove_all_resistant_hotpixels(data)
 
         file_name = hdu.filename()
         new_name = functions.name_gen(file_name)
@@ -184,8 +184,11 @@ def evaluate():
             darkframe_data = darkframe["PRIMARY"].data
             hot_pixels = functions.get_hotpixels(darkframe_data)
             data = hdu["PRIMARY"].data
+
             data_copy = np.copy(data)
+
             noisy_image_data = functions.gen_noisy_image_data_0(hot_pixels, data_copy, darkframe_data, 0.5)
+
             data_copy2 = np.copy(noisy_image_data)
             functions.sub_image(data_copy2, darkframe_data)
 
@@ -196,8 +199,9 @@ def evaluate():
             except Exception as e:
                 print(e)
 
-            new_data = functions.remove_hotpixels(noisy_image_data, hot_pixels, width=2)
-            functions.remove_resistant_hotpixels(new_data)
+            functions.remove_hotpixels(noisy_image_data, hot_pixels, width=2)
+            new_data = noisy_image_data
+            functions.remove_resistant_hotpixels(new_data, min=1000)
             corrected_data = new_data
 
             try:
@@ -214,29 +218,11 @@ def evaluate():
             except Exception as e:
                 print(e)
 
-            #print(functions.get_PSNR(data,corrected_data))
             print(functions.get_PSNR_0(data,corrected_data,hot_pixels))
             print(functions.get_PSNR(data,corrected_data))
             print(functions.get_PSNR(data,data_copy2))
 
-
-
-"""def make_stacked_image():
-    with fits.open(sys.argv[1]) as darkframe:
-        directory = sys.argv[2]
-        if directory[-1] != '/':
-            directory += '/'
-            functions.get_stacked_image(darkframe, directory, width=2)
-
-
-image = cv2.imread("/Users/piopapapigrafo/Desktop/uni/Projeto/results/ngc1300/Hot.fits")
-cv2.circle(image,(x,y),width,(0,255,0))
-
-"""
-
-if __name__ == "__main__":
-    #evaluate()
-
+def make_darkframe_subtration_image():
     with fits.open(sys.argv[1]) as darkframe:
         with fits.open(sys.argv[2]) as hdu:
             darkframe_data = darkframe["PRIMARY"].data
@@ -245,13 +231,75 @@ if __name__ == "__main__":
             functions.sub_image(data_copy, darkframe_data)
 
             try:
-                hdul3 = fits.PrimaryHDU(data_copy)
-                hdul3.writeto("Sub_image3.fits",overwrite=True)
+                hdul = fits.PrimaryHDU(data_copy)
+                hdul.writeto("Sub_image3.fits",overwrite=True)
 
             except Exception as e:
                 print(e)
 
-            print(functions.get_PSNR(data,data_copy))
+def make_flatfield_corrected_image(darkframe, hdu, flatfield):
+    darkframe_data = darkframe["PRIMARY"].data
+    data_copy = np.copy(hdu["PRIMARY"].data)
+    flatfield_data = np.copy(flatfield["PRIMARY"].data)
+
+    hot_pixels = functions.get_hotpixels(darkframe_data, k=2)
+
+    functions.remove_hotpixels(data_copy, hot_pixels, width=2)
+    functions.flat_field_correction(data_copy, flatfield_data)
+
+    try:
+        file_name = hdu.filename()
+        new_name = functions.name_gen(file_name)
+        hdul = fits.PrimaryHDU(data_copy)
+        hdul.writeto(new_name,overwrite=True)
+
+    except Exception as e:
+        print(e)
+
+def make_masterlight(width=1):
+    with fits.open(sys.argv[1]) as darkframe:
+        darkframe_data = darkframe["PRIMARY"].data
+        x_res, y_res = darkframe_data.shape
+        total = np.zeros((x_res,y_res))
+        lights_dir = sys.argv[2]
+        with fits.open(sys.argv[3]) as flatfield:
+            flatfield_data = np.copy(flatfield["PRIMARY"].data)
+            lights = glob.glob(lights_dir+"/NGC*")
+            for light in lights:
+                with fits.open(light) as hdu:
+                    data_copy = np.copy(hdu["PRIMARY"].data)
+                    hot_pixels = functions.get_hotpixels(darkframe_data)
+
+                    functions.remove_hotpixels(data_copy, hot_pixels,width=width)
+                    corrected_data = data_copy
+                    functions.remove_resistant_hotpixels(corrected_data,width=width)
+                    functions.flat_field_correction(corrected_data, flatfield_data)
+                    total += corrected_data
+
+        print(total[0][0])
+        total = total / len(lights)
+        total = np.array(total, dtype = "uint16")
+
+        try:
+            hdul = fits.PrimaryHDU(total)
+            hdul.writeto(lights_dir+"/masterLight.fits",overwrite=True)
+
+        except Exception as e:
+            print(e)
+
+
+if __name__ == "__main__":
+
+    with fits.open(sys.argv[1]) as perfect:
+        with fits.open(sys.argv[2]) as my_perfect:
+            perfect_data = perfect["PRIMARY"].data
+            my_perfect_data = my_perfect["PRIMARY"].data
+            print(functions.get_PSNR(perfect_data,my_perfect_data))
+
+    #make_masterlight(width=2)
+    #make_flatfield_corrected_image()
+
+    #evaluate()
 
     #make_filtered_image() #
     #remove_resistant() #
