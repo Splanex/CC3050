@@ -2,12 +2,7 @@ from astropy.io import fits
 import numpy as np
 import matplotlib.pyplot as plt
 from os.path import exists
-import sys
-import glob
-import concurrent.futures
-import corrections
-import math
-import random
+import sys,glob,concurrent.futures,math,random
 
 #Returns a new file name based on the input file name by adding "_newk" at the end, with k being the smallest possible number
 def name_gen(file_name):
@@ -46,8 +41,8 @@ def remove_hotpixels_0(data, darkframe_data, hot_pixels, width=1):
         data[line][collumn] = max(0,data[line][collumn]-darkframe_data[line][collumn])
 
 
-#Returns the absolute difference average between a pixel and its neighbours
-def get_ADA(value, neighbours):
+#Returns the average absolute difference between a pixel and its neighbours
+def get_AAD(value, neighbours):
     total = 0
     for neighbour in neighbours:
         if (value >= neighbour):
@@ -68,7 +63,7 @@ def remove_resistant_hotpixels(data_copy, min=500,width=1):
         line = k[0]
         collumn = k[1]
         neighbours = get_neighbours(data_copy,x_res,y_res,line,collumn,width)
-        average_abs_diff = get_ADA(data_copy[line][collumn], neighbours)
+        average_abs_diff = get_AAD(data_copy[line][collumn], neighbours)
         if (average_abs_diff >= min):
             mediana = np.median(neighbours)
             data_copy[line][collumn] = mediana
@@ -84,7 +79,7 @@ def remove_all_resistant_hotpixels(data_copy,width=1, alpha=100):
         line = k[0]
         collumn = k[1]
         neighbours = get_neighbours(data_copy,x_res,y_res,line,collumn,width)
-        average_abs_diff = get_ADA(data_copy[line][collumn], neighbours)
+        average_abs_diff = get_AAD(data_copy[line][collumn], neighbours)
         if (average_abs_diff >= alpha):
             mediana = np.median(neighbours)
             data_copy[line][collumn] = mediana
@@ -97,7 +92,7 @@ def get_PSNR(data1, data2, max=65535):
     temp_mse = 0
     for x in range(0, x_res):
         for y in range(0, y_res):
-            temp_mse += (float(data1[x][y]) - float(data2[x][y]))**2.0
+            temp_mse += (data1[x][y] - data2[x][y])**2.0
     mse = temp_mse / (x_res*y_res)
 
     if mse == 0:
@@ -105,6 +100,8 @@ def get_PSNR(data1, data2, max=65535):
 
     return (20*math.log(65535,10) - 10*math.log(mse,10))
 
+#Calculates and returns the peak signal to noise ratio between an image with no hot pixels and a copy of it with noise inserted into it that went through the hot pixels removing algorithm
+#But only for pixels in the hot_pixel list
 def get_PSNR_0(data1, data2, hot_pixels, max=65535):
     temp_mse = 0
     for hot in hot_pixels:
@@ -157,50 +154,11 @@ def gen_noisy_image_data_0(hot_pixels, perfect_image_data, darkframe_data, k=Non
         else:
             noise = random.gauss(1,k)
             perfect_image_data[x][y] = max(perfect_image_data[x][y],noise*darkframe_data[x][y])
-    #perfect_image_data = np.array(perfect_image_data, dtype = "uint16")
+
     return perfect_image_data
 
 def sub_image(data, darkframe_data):
-    x_res, y_res = data.shape
-    for x in range(0,x_res):
-        for y in range(0,y_res):
-            if (data[x][y]>darkframe_data[x][y]):
-                data[x][y] = data[x][y]-darkframe_data[x][y]
-            else:
-                data[x][y] = 0
+    return np.maximum(data - darkframe_data, np.zeros(1, dtype=data.dtype))
 
 def flat_field_correction(data, flatfield_data):
-    x_res, y_res = data.shape
-    scale_factor = np.max(flatfield_data.flatten())
-
-    for x in range(0,x_res):
-        for y in range(0,y_res):
-            data[x][y] = round((float(data[x][y])*scale_factor) / (float(flatfield_data[x][y])))
-    #data = np.array(data, dtype = "uint16")
-
-
-"""def scatter_plot(hotpixels_values,average_abs_diff, k):
-    plt.scatter(hotpixels_values,average_abs_diff)
-    plt.xlabel('Hot values')
-    plt.ylabel('Absolute difference average')
-    plt.title("K = {}".format(k))
-    plt.show()"""
-
-"""def get_stacked_image(darkframe, imgs_direct, std_mult=2, width=1):
-    print(f"Multiplicador de desvio = {std_mult}")
-    print(f"Width = {width}")
-    #calcular hot_pixels
-    darkframe_data = np.copy(darkframe["PRIMARY"].data)
-    hot_pixels = get_hotpixels(darkframe_data)
-
-    imgs = glob.glob(imgs_direct+"*.fits") #Obter lista com o path das imagens
-    final_image = np.zeros(shape=darkframe_data.shape, dtype=darkframe_data.dtype) #Inicializa o np.array que vai acumular os valores das varias imagens
-    for img in imgs:
-        with fits.open(img) as image:
-            print(f"A processar {img}...")
-            final_image += get_filtered_image_data(image["PRIMARY"].data, hot_pixels, width) #Adicionar a final_image os valores de cada imagem filtrada
-    final_image = final_image//len(imgs) #Calcular a media de todas as imagens filtradas
-    #Guardar os dados num ficherio fits
-    hdu = fits.PrimaryHDU(final_image)
-    hdu.writeto(imgs_direct+"stacked.fits", overwrite=True)
-    print(f"Ficheiro stacked gerado: stacked.fits")"""
+    return (data * np.max(flatfield_data)) / flatfield_data
