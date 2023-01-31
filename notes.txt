@@ -1,0 +1,63 @@
+Referências e apontadores para mais informação
+- Types of Image Sensors - https://www.youtube.com/watch?v=nsPvcX-_4KU
+- Resolution, Noise, Dynamic Range - https://www.youtube.com/watch?v=hb6SARVQEJQ
+- Dark Current in CCD Cameras - https://www.youtube.com/watch?v=8AeBzU5P6Is
+- Sensing Color - https://www.youtube.com/watch?v=V4y3K6zoUQs
+- Astropy - https://docs.astropy.org/en/stable/io/fits/
+- Astroalign - https://astroalign.quatrope.org/en/latest/tutorial.html#a-simple-usage-example
+
+v > J*mean(v) + K*std_dev(v) + L
+J=5 (igual à width?)
+K=10 ()
+L=0.01
+
+
+15s -> 3.07
+15min -> 3.43
+
+Métodos alternativos:
+  -We could split the Bayer image into four images, one per RGGB channel, and analyse each channel separately.
+  -To identify hot sensels we might use some "maximum" algorithm, eg a sensel is hot if it is greater than the maximum of surrounding sensels, multiplied by a factor.
+  -Instead of re-running dcraw with a list of bad pixels, we could fix them with IM and re-create the Bayer image as a DNG file. See Processing Bayer pixels.
+  -We might identify hot sensels from a demosaiced image, eg by comparing the colour of a 3x3 square with surrounding colours.
+  -Correction could be made to demosaiced images.
+
+- Porque não utilizar utilizar a mesma estratégia de identificação de pixeis de fundo para
+limitar o número de pixeis iterados?
+
+mediana/desvio padrao
+Peak signal to noise ratio
+structural similiarity
+
+TODO:
+  - Identificar pixeis quentes numa imagem
+  - remove_all_resistant muito demorado
+  - flat field correction :
+    - (corrected_image * M) / (Flat-Dark)
+    - M is the average pixel value of the corrected flat field frame
+  - functions -> Novo nome
+  - Argumento booleaeno em make_masterlight para tipo de correcao
+  - requirements.txt
+
+  - List compreention muito lenta (float32)
+
+RELATORIO:
+  Overleaf, latex
+  Introduzir problema, informacao necessaria para compreender a minha proposta a resolução
+  avaliacoes feitas/ testes
+  conclusao, avaliacao dos resultados, futuras passos
+
+  1. Introdução
+  2. Enquadramento/Background
+    - Fits
+    - Descrição das imagens
+    - Tipos de ruido
+    - Nao uniformidade da luminosidade do sensor
+    - Software (asis studio)
+  3. Trabalho realizado/Desenvolvimento/Proposta
+    - Descricao do processo
+    - Descricao dos algoritmos
+    - Comparacao das metodos utilizados calibracoes
+      -
+  4. resultados
+   - Descricao dos datasets
