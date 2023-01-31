@@ -8,7 +8,7 @@ Available commands:
   2. Perform darkframe correction:
      cdf out_file df_file ff_file file1 ... filen
      
-  3. Perform hot pixel correction	
+  3. Perform hot pixel correction:
      chp out_file df_file ff_file k file1 ... filen
      
   4. Compare two files:
